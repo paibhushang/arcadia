@@ -37,10 +37,10 @@ services:
     networks:
     - internal
 
-  gemma4:
-    image: ai/gemma4
-    container_name: gemma4
-    hostname: gemma4
+  ollama:
+    build: ./ollama
+    container_name: ollama
+    hostname: ollama
     networks:
       - internal
     # Uncomment to enable GPU access:
@@ -57,9 +57,9 @@ services:
     container_name: chatbot
     hostname: chatbot
     environment:
-      - GEMMA_URL=http://gemma4:8080/v1/chat/completions
+      - GEMMA_URL=http://ollama:11434/v1/chat/completions
     depends_on:
-      - gemma4
+      - ollama
     networks:
       - internal
 

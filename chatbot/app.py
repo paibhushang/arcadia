@@ -10,8 +10,8 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GEMMA_URL = os.getenv("GEMMA_URL", "http://gemma4:8080/v1/chat/completions")
-GEMMA_MODEL = os.getenv("GEMMA_MODEL", "gemma4")
+GEMMA_URL = os.getenv("GEMMA_URL", "http://ollama:11434/v1/chat/completions")
+GEMMA_MODEL = os.getenv("GEMMA_MODEL", "gemma4:4b")
 
 SYSTEM_PROMPT = (
     "You are Aria, a friendly and professional customer support assistant for Arcadia Finance. "
@@ -76,7 +76,7 @@ async def chat(request: ChatRequest):
 async def health():
     async with httpx.AsyncClient(timeout=5.0) as client:
         try:
-            r = await client.get(GEMMA_URL.replace("/v1/chat/completions", "/health"))
+            r = await client.get(GEMMA_URL.replace("/v1/chat/completions", "/"))
             model_status = "ok" if r.is_success else "unreachable"
         except httpx.HTTPError:
             model_status = "unreachable"

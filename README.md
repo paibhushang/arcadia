@@ -15,7 +15,7 @@ A demo microservices banking application with an AI-powered support chat.
 | **Backend** | Data persistence (accounts, stocks, transfers) | `backend` |
 | **App2** | REST API for money transfers | `app2` |
 | **App3** | Credit card requests + logging | `app3` |
-| **Gemma4** | Local LLM model server (`ai/gemma4`) | `gemma4` |
+| **Ollama** | Local LLM server (Ubuntu + Ollama + `gemma4:4b`) | `ollama` |
 | **Chatbot** | Support chat API + widget | `chatbot` |
 
 All services communicate over an internal Docker network. Nginx is the only publicly exposed port (80).
@@ -80,7 +80,7 @@ Build the images and start all services:
 docker compose up --build -d
 ```
 
-This builds the **MainApp**, **Backend**, **App2**, **App3**, and **Chatbot** images locally, pulls `ai/gemma4`, and starts everything.
+This builds all images locally — including the **Ollama** Ubuntu image with `gemma4:4b` pre-downloaded — and starts everything.
 
 Check that all containers are running:
 
@@ -92,7 +92,7 @@ View logs for a specific service:
 
 ```bash
 docker compose logs -f chatbot
-docker compose logs -f gemma4
+docker compose logs -f ollama
 ```
 
 Stop everything:
@@ -114,6 +114,7 @@ docker build -t arcadia_mainapp  ./main/MainApp
 docker build -t arcadia_backend  ./backend
 docker build -t arcadia_app2     ./app2
 docker build -t arcadia_app3     ./app3
+docker build -t arcadia_ollama   ./ollama
 docker build -t arcadia_chatbot  ./chatbot
 docker build -t arcadia_nginx    ./Nginx
 ```
@@ -141,13 +142,13 @@ docker run -dit -h mainapp --name=mainapp --net=internal \
   -v $(pwd)/main/MainApp:/var/www/html \
   arcadia_mainapp
 
-# Gemma4 model server
-docker run -dit -h gemma4 --name=gemma4 --net=internal \
-  ai/gemma4
+# Ollama model server (gemma4:4b pre-downloaded in image)
+docker run -dit -h ollama --name=ollama --net=internal \
+  arcadia_ollama
 
 # Chatbot API
 docker run -dit -h chatbot --name=chatbot --net=internal \
-  -e GEMMA_URL=http://gemma4:8080/v1/chat/completions \
+  -e GEMMA_URL=http://ollama:11434/v1/chat/completions \
   arcadia_chatbot
 
 # Nginx API gateway (publicly exposed on port 80)
@@ -183,9 +184,9 @@ The support chat widget (Aria) appears as a floating button in the bottom-right 
 
 ---
 
-## GPU acceleration for Gemma4 (optional)
+## GPU acceleration for Ollama (optional)
 
-For faster chat responses, enable GPU passthrough to the `gemma4` container.
+For faster chat responses, enable GPU passthrough to the `ollama` container.
 
 Install the NVIDIA Container Toolkit:
 
@@ -200,11 +201,11 @@ sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-Then uncomment the `deploy` block in `docker-compose.yml` under the `gemma4` service:
+Then uncomment the `deploy` block in `docker-compose.yml` under the `ollama` service:
 
 ```yaml
-  gemma4:
-    image: ai/gemma4
+  ollama:
+    build: ./ollama
     deploy:
       resources:
         reservations:
@@ -214,10 +215,10 @@ Then uncomment the `deploy` block in `docker-compose.yml` under the `gemma4` ser
               capabilities: [gpu]
 ```
 
-Restart the gemma4 service:
+Restart the ollama service:
 
 ```bash
-docker compose up -d gemma4
+docker compose up -d ollama
 ```
 
 ---
@@ -230,6 +231,7 @@ arcadia-finance/
 ├── backend/files/      # JSON data store (accounts, stocks, transfers)
 ├── app2/api/           # Money transfer REST API (PHP/Apache)
 ├── app3/app3/          # Credit card requests + logging (PHP/Apache)
+├── ollama/             # Ubuntu image with Ollama + gemma4:4b pre-downloaded
 ├── chatbot/            # AI support chat service (FastAPI + httpx)
 │   └── static/         # Chat widget JS and CSS served to the browser
 ├── Nginx/              # API gateway config and Dockerfile
