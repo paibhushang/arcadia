@@ -53,7 +53,7 @@ services:
     #           capabilities: [gpu]
 
   chatbot:
-    build: ./main/chatbot
+    build: ./chatbot
     container_name: chatbot
     hostname: chatbot
     environment:
