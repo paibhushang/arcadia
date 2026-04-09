@@ -1,0 +1,275 @@
+/* ── Arcadia Finance Support Chat Widget ───────────────────────────────── */
+
+#arcadia-chat-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ── Toggle button ─────────────────────────────────────────────────────── */
+.arcadia-chat-toggle {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #007cb5;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 124, 181, 0.45);
+  transition: background 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.arcadia-chat-toggle:hover {
+  background: #005f8e;
+  transform: scale(1.06);
+}
+
+.arcadia-chat-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: #e53e3e;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+/* ── Chat panel ────────────────────────────────────────────────────────── */
+.arcadia-chat-panel {
+  width: 350px;
+  height: 500px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 14px;
+  animation: arcadia-slide-up 0.2s ease;
+}
+
+@keyframes arcadia-slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.arcadia-chat-header {
+  background: linear-gradient(135deg, #007cb5 0%, #005f8e 100%);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.arcadia-chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arcadia-chat-dot {
+  width: 10px;
+  height: 10px;
+  background: #4ade80;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3);
+  animation: arcadia-pulse 2s ease-in-out infinite;
+}
+
+@keyframes arcadia-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3); }
+  50%       { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0.1); }
+}
+
+.arcadia-chat-agent-name {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.2px;
+}
+
+.arcadia-chat-agent-role {
+  font-size: 11px;
+  opacity: 0.82;
+  margin-top: 1px;
+}
+
+.arcadia-chat-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.75;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.arcadia-chat-close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Messages area ─────────────────────────────────────────────────────── */
+.arcadia-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f0f4f8;
+  scroll-behavior: smooth;
+}
+
+.arcadia-chat-messages::-webkit-scrollbar { width: 4px; }
+.arcadia-chat-messages::-webkit-scrollbar-thumb { background: #c1ccd8; border-radius: 4px; }
+
+.arcadia-chat-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 82%;
+}
+
+.arcadia-chat-message.user {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.arcadia-chat-message.bot {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.arcadia-chat-bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.arcadia-chat-message.user .arcadia-chat-bubble {
+  background: #007cb5;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.arcadia-chat-message.bot .arcadia-chat-bubble {
+  background: #fff;
+  color: #1a2535;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Typing indicator ──────────────────────────────────────────────────── */
+.arcadia-typing {
+  display: flex !important;
+  align-items: center;
+  gap: 5px;
+  padding: 13px 16px !important;
+}
+
+.arcadia-typing span {
+  width: 7px;
+  height: 7px;
+  background: #007cb5;
+  border-radius: 50%;
+  display: inline-block;
+  animation: arcadia-bounce 1.3s ease infinite;
+}
+
+.arcadia-typing span:nth-child(2) { animation-delay: 0.18s; }
+.arcadia-typing span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes arcadia-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30%            { transform: translateY(-7px); }
+}
+
+/* ── Input area ────────────────────────────────────────────────────────── */
+.arcadia-chat-input-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #dde5ee;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.arcadia-chat-input {
+  flex: 1;
+  border: 1.5px solid #dde5ee;
+  border-radius: 24px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #f7f9fc;
+  color: #1a2535;
+}
+
+.arcadia-chat-input:focus {
+  border-color: #007cb5;
+  background: #fff;
+}
+
+.arcadia-chat-input::placeholder { color: #9daab8; }
+
+.arcadia-chat-send {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #007cb5;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.arcadia-chat-send:hover {
+  background: #005f8e;
+  transform: scale(1.05);
+}
+
+/* ── Mobile ────────────────────────────────────────────────────────────── */
+@media (max-width: 420px) {
+  #arcadia-chat-widget {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .arcadia-chat-panel {
+    width: calc(100vw - 32px);
+    height: 420px;
+  }
+}

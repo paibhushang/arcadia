@@ -1,0 +1,64 @@
+version: '3'
+services:
+  mainapp:
+    build: .
+    container_name: mainapp
+    hostname: mainapp
+    volumes:
+    - /Users/dierick/F5_Networks/GitHub/arcadia-finance/MainApp/:/var/www/html/
+    image: arcadia_mainapp
+    networks:
+    - internal
+  backend:
+    build: .
+    container_name: backend
+    hostname: backend
+    volumes:
+    - /Users/dierick/F5_Networks/GitHub/arcadia-finance/files/:/var/www/html/files/
+    image: arcadia_backend
+    networks:
+    - internal
+  app2:
+    build: .
+    container_name: app2
+    hostname: app3
+    volumes:
+    - /Users/dierick/F5_Networks/GitHub/arcadia-finance/api/:/var/www/html/api/
+    image: arcadia_app2
+    networks:
+    - internal
+  app3:
+    build: .
+    container_name: app3
+    hostname: app3
+    volumes:
+    - /Users/dierick/F5_Networks/GitHub/arcadia-finance/app3/:/var/www/html/app3/
+    image: arcadia_app3
+    networks:
+    - internal
+
+  chatbot:
+    build: ./main/chatbot
+    container_name: chatbot
+    hostname: chatbot
+    environment:
+      - MODEL_ID=google/gemma-4-E4B
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - model-cache:/model-cache
+    networks:
+      - internal
+    # Uncomment to enable GPU access:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+networks:
+  internal:
+
+volumes:
+  model-cache:
