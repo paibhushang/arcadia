@@ -37,15 +37,10 @@ services:
     networks:
     - internal
 
-  chatbot:
-    build: ./main/chatbot
-    container_name: chatbot
-    hostname: chatbot
-    environment:
-      - MODEL_ID=google/gemma-4-E4B
-      - HF_TOKEN=${HF_TOKEN}
-    volumes:
-      - model-cache:/model-cache
+  gemma4:
+    image: ai/gemma4
+    container_name: gemma4
+    hostname: gemma4
     networks:
       - internal
     # Uncomment to enable GPU access:
@@ -57,8 +52,16 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
+  chatbot:
+    build: ./main/chatbot
+    container_name: chatbot
+    hostname: chatbot
+    environment:
+      - GEMMA_URL=http://gemma4:8080/v1/chat/completions
+    depends_on:
+      - gemma4
+    networks:
+      - internal
+
 networks:
   internal:
-
-volumes:
-  model-cache:
