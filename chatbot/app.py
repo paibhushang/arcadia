@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 GEMMA_URL = os.getenv("GEMMA_URL", "http://ollama:11434/v1/chat/completions")
-GEMMA_MODEL = os.getenv("GEMMA_MODEL", "gemma4:4b")
+GEMMA_MODEL = os.getenv("GEMMA_MODEL", "llama3.2")
 
 SYSTEM_PROMPT = (
     "You are Aria, a friendly and professional customer support assistant for Arcadia Finance. "
@@ -57,6 +57,7 @@ async def chat(request: ChatRequest):
         "max_tokens": 512,
         "temperature": 0.7,
         "top_p": 0.9,
+        "stream": False,
     }
 
     async with httpx.AsyncClient(timeout=120.0) as client:
