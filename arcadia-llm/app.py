@@ -6,6 +6,8 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from ingest import run_ingest, query_context
@@ -44,6 +46,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
@@ -128,6 +132,26 @@ async def ingest(background_tasks: BackgroundTasks):
         chunk_overlap=CHUNK_OVERLAP,
     )
     return {"status": "ingestion started"}
+
+
+# ── Admin UI ─────────────────────────────────────────────────────────────────
+@app.get("/admin", include_in_schema=False)
+async def admin_ui():
+    return FileResponse("static/admin.html")
+
+
+@app.get("/docs-list")
+async def docs_list():
+    docs_path = Path(DOCS_DIR)
+    if not docs_path.exists():
+        return {"files": []}
+    supported = {".txt", ".md", ".pdf", ".csv", ".json"}
+    files = [
+        {"name": p.name, "size": p.stat().st_size}
+        for p in sorted(docs_path.iterdir())
+        if p.is_file() and p.suffix.lower() in supported
+    ]
+    return {"files": files}
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

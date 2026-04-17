@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arcadia LLM — Knowledge Base Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a2535;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #007cb5 0%, #005f8e 100%);
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 20px; font-weight: 700; }
+    header span { font-size: 13px; opacity: 0.8; }
+
+    main {
+      max-width: 860px;
+      margin: 36px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 28px 32px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: #007cb5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Upload form ── */
+    .drop-zone {
+      border: 2px dashed #b0c4d8;
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: #f7fafd;
+    }
+    .drop-zone.dragover {
+      border-color: #007cb5;
+      background: #eaf4fb;
+    }
+    .drop-zone p { color: #6b7a8d; font-size: 14px; margin-top: 8px; }
+    .drop-zone input[type=file] { display: none; }
+
+    .file-list-pending {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .file-tag {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #eaf4fb;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+    .file-tag .remove-btn {
+      background: none;
+      border: none;
+      color: #e53e3e;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: #007cb5; color: #fff; }
+    .btn-primary:hover { background: #005f8e; }
+    .btn-primary:disabled { background: #93c5da; cursor: not-allowed; transform: none; }
+    .btn-success { background: #2f855a; color: #fff; }
+    .btn-success:hover { background: #276749; }
+    .btn-success:disabled { background: #9ae6b4; cursor: not-allowed; transform: none; }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Status ── */
+    #status-box {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+    #status-box.info    { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; }
+    #status-box.success { background: #f0fff4; color: #276749; border: 1px solid #9ae6b4; }
+    #status-box.error   { background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      background: #e2e8f0;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+      display: none;
+      margin-top: 12px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #007cb5;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* ── Uploaded files table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: #f0f4f8;
+      color: #4a5568;
+      font-weight: 600;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #2d3748;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f7fafd; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-txt  { background: #ebf8ff; color: #2b6cb0; }
+    .badge-pdf  { background: #fff5f5; color: #c53030; }
+    .badge-json { background: #fffff0; color: #744210; }
+    .badge-csv  { background: #f0fff4; color: #276749; }
+    .badge-md   { background: #faf5ff; color: #553c9a; }
+    .badge-other{ background: #f7fafc; color: #4a5568; }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 0;
+      color: #a0aec0;
+      font-size: 14px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+  </svg>
+  <div>
+    <h1>Arcadia LLM — Knowledge Base Admin</h1>
+    <span>Upload documents and build the vector context for Aria</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Upload card ── -->
+  <div class="card">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload Documents
+    </h2>
+
+    <div class="drop-zone" id="drop-zone">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#b0c4d8" stroke-width="1.5">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <p><strong>Click to browse</strong> or drag &amp; drop files here</p>
+      <p>Supported: .txt &nbsp;.md &nbsp;.pdf &nbsp;.csv &nbsp;.json</p>
+      <input type="file" id="file-input" multiple accept=".txt,.md,.pdf,.csv,.json">
+    </div>
+
+    <div class="file-list-pending" id="pending-list"></div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div id="status-box"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="upload-btn" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Files
+      </button>
+      <button class="btn btn-success" id="ingest-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Run Ingestion
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Uploaded files card ── -->
+  <div class="card">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      Documents in Knowledge Base
+      <button class="btn btn-primary" id="refresh-btn" style="margin-left:auto;padding:6px 14px;font-size:12px;">Refresh</button>
+    </h2>
+    <table id="docs-table">
+      <thead>
+        <tr><th>Filename</th><th>Type</th><th>Size</th></tr>
+      </thead>
+      <tbody id="docs-tbody">
+        <tr><td colspan="3" class="empty-state">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var UPLOAD_API = '/arcadia-llm/upload';
+  var INGEST_API = '/arcadia-llm/ingest';
+  var DOCS_API   = '/arcadia-llm/docs-list';
+
+  var pendingFiles = [];
+
+  var dropZone   = document.getElementById('drop-zone');
+  var fileInput  = document.getElementById('file-input');
+  var pendingList= document.getElementById('pending-list');
+  var uploadBtn  = document.getElementById('upload-btn');
+  var ingestBtn  = document.getElementById('ingest-btn');
+  var refreshBtn = document.getElementById('refresh-btn');
+  var statusBox  = document.getElementById('status-box');
+  var progressWrap = document.getElementById('progress-wrap');
+  var progressBar  = document.getElementById('progress-bar');
+
+  // ── Drop zone ──────────────────────────────────────────────────────────────
+  dropZone.addEventListener('click', function () { fileInput.click(); });
+
+  dropZone.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', function () {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    addFiles(Array.from(e.dataTransfer.files));
+  });
+
+  fileInput.addEventListener('change', function () {
+    addFiles(Array.from(fileInput.files));
+    fileInput.value = '';
+  });
+
+  function addFiles(files) {
+    files.forEach(function (f) {
+      if (!pendingFiles.find(function (p) { return p.name === f.name; })) {
+        pendingFiles.push(f);
+      }
+    });
+    renderPending();
+  }
+
+  function renderPending() {
+    pendingList.innerHTML = '';
+    pendingFiles.forEach(function (f, i) {
+      var tag = document.createElement('div');
+      tag.className = 'file-tag';
+      tag.innerHTML =
+        '<span>' + escHtml(f.name) + ' <span style="color:#9daab8">(' + formatBytes(f.size) + ')</span></span>' +
+        '<button class="remove-btn" data-i="' + i + '">&#10005;</button>';
+      pendingList.appendChild(tag);
+    });
+    pendingList.querySelectorAll('.remove-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        pendingFiles.splice(parseInt(btn.dataset.i), 1);
+        renderPending();
+      });
+    });
+    uploadBtn.disabled = pendingFiles.length === 0;
+  }
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  uploadBtn.addEventListener('click', function () {
+    if (!pendingFiles.length) return;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<span class="spinner"></span> Uploading…';
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    hideStatus();
+
+    var total = pendingFiles.length;
+    var done  = 0;
+    var errors = [];
+
+    function next(i) {
+      if (i >= total) {
+        progressBar.style.width = '100%';
+        pendingFiles = [];
+        renderPending();
+        uploadBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Files';
+        uploadBtn.disabled = true;
+        setTimeout(function () { progressWrap.style.display = 'none'; }, 800);
+        if (errors.length) {
+          showStatus('error', 'Some files failed to upload: ' + errors.join(', '));
+        } else {
+          showStatus('success', total + ' file' + (total > 1 ? 's' : '') + ' uploaded successfully.');
+          loadDocsList();
+        }
+        return;
+      }
+
+      var fd = new FormData();
+      fd.append('file', pendingFiles[i]);
+      fetch(UPLOAD_API, { method: 'POST', body: fd })
+        .then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          done++;
+          progressBar.style.width = Math.round((done / total) * 100) + '%';
+          next(i + 1);
+        })
+        .catch(function () {
+          errors.push(pendingFiles[i].name);
+          done++;
+          progressBar.style.width = Math.round((done / total) * 100) + '%';
+          next(i + 1);
+        });
+    }
+    next(0);
+  });
+
+  // ── Ingest ─────────────────────────────────────────────────────────────────
+  ingestBtn.addEventListener('click', function () {
+    ingestBtn.disabled = true;
+    ingestBtn.innerHTML = '<span class="spinner"></span> Running…';
+    hideStatus();
+
+    fetch(INGEST_API, { method: 'POST' })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      })
+      .then(function () {
+        showStatus('success', 'Ingestion started in the background. Check container logs for progress.');
+      })
+      .catch(function () {
+        showStatus('error', 'Failed to start ingestion. Is the service running?');
+      })
+      .finally(function () {
+        ingestBtn.disabled = false;
+        ingestBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> Run Ingestion';
+      });
+  });
+
+  // ── Docs list ──────────────────────────────────────────────────────────────
+  refreshBtn.addEventListener('click', loadDocsList);
+
+  function loadDocsList() {
+    var tbody = document.getElementById('docs-tbody');
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Loading…</td></tr>';
+    fetch(DOCS_API)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.files || data.files.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No documents uploaded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        data.files.forEach(function (f) {
+          var tr = document.createElement('tr');
+          var ext = f.name.split('.').pop().toLowerCase();
+          var badgeClass = { txt:'badge-txt', md:'badge-md', pdf:'badge-pdf', csv:'badge-csv', json:'badge-json' }[ext] || 'badge-other';
+          tr.innerHTML =
+            '<td>' + escHtml(f.name) + '</td>' +
+            '<td><span class="badge ' + badgeClass + '">.' + escHtml(ext) + '</span></td>' +
+            '<td>' + formatBytes(f.size) + '</td>';
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(function () {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Could not load file list.</td></tr>';
+      });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function showStatus(type, msg) {
+    statusBox.className = type;
+    statusBox.textContent = msg;
+    statusBox.style.display = 'block';
+  }
+  function hideStatus() {
+    statusBox.style.display = 'none';
+  }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  loadDocsList();
+})();
+</script>
+</body>
+</html>
