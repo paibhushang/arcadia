@@ -37,29 +37,31 @@ services:
     networks:
     - internal
 
-  ollama:
-    build: ./ollama
-    container_name: ollama
-    hostname: ollama
+  arcadia-llm:
+    build: ./arcadia-llm
+    container_name: arcadia-llm
+    hostname: arcadia-llm
+    environment:
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_API_URL=${LLM_API_URL:-https://api.openai.com/v1/chat/completions}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o-mini}
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - VECTOR_TOP_K=${VECTOR_TOP_K:-4}
+    volumes:
+      - ./arcadia-llm/docs:/app/docs
+      - ./arcadia-llm/chromadb:/app/chromadb
     networks:
       - internal
-    # Uncomment to enable GPU access:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
 
   chatbot:
     build: ./chatbot
     container_name: chatbot
     hostname: chatbot
     environment:
-      - GEMMA_URL=http://ollama:11434/v1/chat/completions
+      - LLM_URL=http://arcadia-llm:8001/chat
     depends_on:
-      - ollama
+      - arcadia-llm
     networks:
       - internal
 
