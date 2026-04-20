@@ -12,7 +12,10 @@ from pydantic import BaseModel
 
 from ingest import run_ingest, query_context
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 # ── LLM config ────────────────────────────────────────────────────────────────
@@ -94,6 +97,10 @@ async def chat(request: ChatRequest):
         "stream": False,
     }
 
+    logger.debug("LLM request url  : %s", LLM_API_URL)
+    logger.debug("LLM request model: %s", LLM_MODEL)
+    logger.debug("LLM request payload:\n%s", __import__("json").dumps(payload, indent=2))
+
     async with httpx.AsyncClient(timeout=120.0) as client:
         try:
             resp = await client.post(
@@ -101,10 +108,24 @@ async def chat(request: ChatRequest):
                 json=payload,
                 headers={"Authorization": f"Bearer {LLM_API_KEY}"},
             )
-            resp.raise_for_status()
         except httpx.HTTPError as e:
-            logger.error(f"LLM request failed: {e}")
+            logger.error("LLM network error: %s", e)
             raise HTTPException(status_code=502, detail="LLM service unavailable")
+
+    logger.debug("LLM response status : %s", resp.status_code)
+    logger.debug("LLM response headers: %s", dict(resp.headers))
+    logger.debug("LLM response body   :\n%s", resp.text)
+
+    if resp.status_code != 200:
+        logger.error(
+            "LLM returned %s — body: %s",
+            resp.status_code,
+            resp.text,
+        )
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM returned {resp.status_code}: {resp.text}",
+        )
 
     reply = resp.json()["choices"][0]["message"]["content"].strip()
     return {"response": reply}
